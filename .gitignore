@@ -1,0 +1,27 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/react_auth/node_modules
+/react_auth/.pnp
+.pnp.js
+/users/__pycache__*
+/users/migrations/__pycache__*
+.idea*
+/auth_django/__pycache__*
+
+# testing
+/react_auth/coverage
+
+# production
+/react_auth/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
