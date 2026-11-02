@@ -22,12 +22,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-$w1@8&&3e2x=p!hebxnd54ue@aot^4t7s&b8u_c#wt$(a&!20#'
+import os
+BASE_DIR.joinpath('data').mkdir(exist_ok=True)
+_key_file = BASE_DIR / 'data' / 'secret.key'
+if not os.environ.get('DJANGO_SECRET_KEY') and not _key_file.exists():
+    from django.core.management.utils import get_random_secret_key
+    try:
+        with _key_file.open('x') as _key:
+            _key.write(get_random_secret_key())
+        _key_file.chmod(0o600)
+    except FileExistsError:
+        pass
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY') or _key_file.read_text()
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', '1') == '1'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
 
 
 # Application definition
@@ -40,15 +52,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'users',
-    'corsheaders',
-    'rest_framework',
+
+
 
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
+
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -80,15 +92,7 @@ WSGI_APPLICATION = 'auth_django.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'Auth',
-        'USER': 'root',
-        'PASSWORD' : '12345678',
-    }
-}
-
+DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': BASE_DIR / 'data' / 'db.sqlite3'}}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -134,5 +138,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # overriding the default User model we created in the models.py to the project
 AUTH_USER_MODEL  = 'users.User'
 
-CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_CREDENTIALS = True
+
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Strict'
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_AGE = 86400
+PASSWORD_RESET_TIMEOUT = 3600
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'no-reply@obsidian.local'
+FRONTEND_ORIGIN = os.environ.get('FRONTEND_ORIGIN', 'http://localhost:5177')
+CSRF_TRUSTED_ORIGINS = [FRONTEND_ORIGIN]

@@ -1,9 +1,3 @@
 from django.urls import path
-from .views import RegisterView, LoginView, UserView, LogoutView
-
-urlpatterns = [
-    path('register/',RegisterView.as_view()),
-    path('login/',LoginView.as_view()),
-    path('user/',UserView.as_view()),
-    path('logout/',LogoutView.as_view()),
-]
+from . import views
+urlpatterns = [path('bootstrap/', views.bootstrap), path('register/', views.register), path('login/', views.login), path('user/', views.user_view), path('logout/', views.logout), path('mfa/challenge/', views.challenge), path('mfa/enroll/', views.enroll), path('mfa/confirm/', views.confirm), path('mfa/disable/', views.disable), path('sessions/revoke/', views.revoke), path('password/forgot/', views.forgot), path('password/reset/', views.reset)]
