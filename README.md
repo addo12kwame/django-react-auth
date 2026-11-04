@@ -1,5 +1,7 @@
 # Obsidian Access
 
+[Live portfolio demo](https://obsidian-access.vercel.app) · Use test credentials only
+
 A refreshed Django + React authentication project with a distinct graphite-and-violet interface, server-side sessions, authenticator-based two-factor authentication, recovery codes, password reset, and session revocation.
 
 ![Dark sign-in screen](signin-preview.png)
@@ -77,3 +79,13 @@ This is a local portfolio implementation, not an audited identity provider. Add 
 The API exposes no live email sender or external authentication integration by default. The frontend fetches Google Fonts and has local font fallbacks.
 
 References: [Django authentication](https://docs.djangoproject.com/en/5.2/topics/auth/default/) and [PyOTP](https://pyauth.github.io/pyotp/).
+
+## Vercel deployment
+
+The hosted app serves the React build from Vercel's CDN and Django through the Python function in `api/index.py`. The API route is handled before the SPA fallback. Accounts, MFA state, security events, and sessions persist in Neon Postgres; the function does not create or depend on local data files. A stable encrypted `DJANGO_SECRET_KEY` is configured in Vercel. Do not rotate it without planning for existing encrypted authenticator secrets.
+
+Hosted settings disable debug mode, restrict allowed hosts to the deployment and production domains, trust HTTPS forwarding from Vercel, require Secure cookies, enforce CSRF, and use a shared Postgres-backed throttle cache. Rate limiting remains a demo control; the database cache increment is not an atomic distributed counter. Email verification is not implemented. Password-reset email is explicitly unavailable in the hosted demo (503), and reset tokens are never printed in hosted logs. Local runs retain console reset delivery. Use test credentials and keep recovery codes.
+
+For a new environment: provision the database, configure `DATABASE_URL` and a stable `DJANGO_SECRET_KEY`, run `python manage.py migrate --noinput` and `python manage.py createcachetable`, then deploy. Never run migrations as part of every request. The frontend build is `npm --prefix react_auth run build`. The checked-in `.env` files and database secrets are excluded from Git.
+
+Verification: 11 local Django tests and the TypeScript production build pass. Live checks cover registration, CSRF-protected login, persistent account state, verified TOTP enrollment, one-use recovery-code challenge, logout, and the explicit disabled-email response. This is an educational authentication demo, not an audited identity provider.

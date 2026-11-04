@@ -239,6 +239,8 @@ def revoke(request):
 
 @endpoint()
 def forgot(request):
+    if getattr(settings, 'HOSTED', False):
+        return JsonResponse({'error': 'Password reset email is not configured for this portfolio demo. Keep your test credentials or create another test account.'}, status=503)
     limited = throttle(request, 'reset')
     if limited: return limited
     email = str(request.payload.get('email', '')).strip().lower()

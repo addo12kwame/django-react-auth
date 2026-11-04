@@ -340,10 +340,11 @@ function App() {
                   : mode === "challenge"
                     ? "Enter an authenticator code or an unused recovery code."
                     : mode === "forgot"
-                      ? "Request a one-hour password reset link. This local demo writes the link to the server console."
+                      ? "Request a one-hour password reset link. Local runs print links to the console; email delivery is unavailable in the hosted demo."
                       : "Choose a new password. Your existing sessions will be revoked."}
             </p>
             {feedback}
+            <p style={{fontSize:12,lineHeight:1.6,color:"#aaa7b6"}}>Portfolio demo · Use test credentials only. Email verification and hosted password-reset delivery are not configured. Keep your password and recovery codes.</p>
             <form onSubmit={submit}>
               {mode === "register" && (
                 <label>

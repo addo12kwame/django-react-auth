@@ -8,3 +8,7 @@ react_auth/node_modules/
 react_auth/dist/
 react_auth/build/
 .DS_Store
+
+.vercel/
+.env*
+!.env.example

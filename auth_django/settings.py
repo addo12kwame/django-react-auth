@@ -23,9 +23,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 import os
-BASE_DIR.joinpath('data').mkdir(exist_ok=True)
+HOSTED = bool(os.environ.get('VERCEL'))
+if not HOSTED:
+    BASE_DIR.joinpath('data').mkdir(exist_ok=True)
 _key_file = BASE_DIR / 'data' / 'secret.key'
-if not os.environ.get('DJANGO_SECRET_KEY') and not _key_file.exists():
+if HOSTED and not os.environ.get('DJANGO_SECRET_KEY'):
+    raise RuntimeError('DJANGO_SECRET_KEY must be configured for hosting')
+if not HOSTED and not os.environ.get('DJANGO_SECRET_KEY') and not _key_file.exists():
     from django.core.management.utils import get_random_secret_key
     try:
         with _key_file.open('x') as _key:
@@ -37,9 +41,12 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY') or _key_file.read_text()
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', '1') == '1'
+DEBUG = os.environ.get('DJANGO_DEBUG', '0' if HOSTED else '1') == '1'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
+_deployment_host = os.environ.get('VERCEL_URL', '')
+_production_host = os.environ.get('VERCEL_PROJECT_PRODUCTION_URL', '')
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver'] + [h for h in [_deployment_host, _production_host] if h]
+ALLOWED_HOSTS += [h for h in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',') if h]
 
 
 # Application definition
@@ -149,3 +156,17 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'no-reply@obsidian.local'
 FRONTEND_ORIGIN = os.environ.get('FRONTEND_ORIGIN', 'http://localhost:5177')
 CSRF_TRUSTED_ORIGINS = [FRONTEND_ORIGIN]
+
+# Hosted configuration keeps credentials and sessions off the function filesystem.
+if os.environ.get('DATABASE_URL'):
+    import dj_database_url
+    DATABASES = {'default': dj_database_url.parse(os.environ['DATABASE_URL'], conn_max_age=0, ssl_require=True)}
+if HOSTED:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000
+    CACHES = {'default': {'BACKEND': 'django.core.cache.backends.db.DatabaseCache', 'LOCATION': 'auth_rate_cache'}}
+    DATA_UPLOAD_MAX_MEMORY_SIZE = 16384
+    FRONTEND_ORIGIN = 'https://' + (_production_host or _deployment_host)
+    CSRF_TRUSTED_ORIGINS = ['https://' + h for h in [_production_host, _deployment_host] if h]
+    EMAIL_BACKEND = 'django.core.mail.backends.dummy.EmailBackend'

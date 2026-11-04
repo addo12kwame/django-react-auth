@@ -1,0 +1,6 @@
+.venv
+data
+**/__pycache__
+react_auth/node_modules
+.git
+.env*
