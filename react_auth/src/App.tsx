@@ -297,7 +297,7 @@ function App() {
         </section>
         <section className="form-side">
           <div className="form-top">
-            <span>LOCAL DEVELOPMENT ENVIRONMENT</span>
+            <span>PORTFOLIO DEMO ENVIRONMENT</span>
             <span className="environment-dot" />
           </div>
           <div className="auth-form-wrap">
@@ -558,7 +558,7 @@ function App() {
           </span>
           <span className="env-tag">
             <i />
-            LOCAL DEMO
+            PORTFOLIO DEMO
           </span>
         </header>
         <main>
